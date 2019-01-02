@@ -10,7 +10,6 @@ package scheduler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-zoo/bone"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -19,61 +18,49 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/pkg/clients"
 	"github.com/edgexfoundry/edgex-go/pkg/models"
+	"github.com/gorilla/mux"
 )
 
 func LoadRestRoutes() http.Handler {
-
-	mux := bone.New()
+	r := mux.NewRouter()
 
 	// Ping Resource
-	mux.Get(clients.ApiPingRoute, http.HandlerFunc(replyPing))
+	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
 
 	// Configuration
-	mux.Get(clients.ApiConfigRoute, http.HandlerFunc(replyConfig))
+	r.HandleFunc(clients.ApiConfigRoute, configHandler).Methods(http.MethodGet)
 
 	// Metrics
-	mux.Get(clients.ApiMetricsRoute, http.HandlerFunc(replyMetrics))
+	r.HandleFunc(clients.ApiMetricsRoute, metricsHandler).Methods(http.MethodGet)
 
-	// default api route
-	mv1 := mux.Prefix("/api/v1")
+	b := r.PathPrefix(clients.ApiBase).Subrouter()
 
-	// info
-	mv1.Get("/info/:name", http.HandlerFunc(replyInfo))
+	// Info
+	b.HandleFunc("/info/{name}", replyInfo).Methods(http.MethodGet)
 
-	// flush reload schedules
-	mv1.Get("/flush", http.HandlerFunc(replyFlushScheduler))
+	// Flush reload schedules
+	b.HandleFunc("/flush", replyFlushScheduler).Methods(http.MethodGet)
 
-	// callbacks
-	mv1.Post("/callbacks", http.HandlerFunc(addCallbackAlert))
-	mv1.Put("/callbacks", http.HandlerFunc(updateCallbackAlert))
-	mv1.Delete("/callbacks", http.HandlerFunc(removeCallbackAlert))
+	// Callback
+	r.HandleFunc(clients.ApiCallbackRoute, addCallbackAlert).Methods(http.MethodPost)
+	r.HandleFunc(clients.ApiCallbackRoute, updateCallbackAlert).Methods(http.MethodPut)
+	r.HandleFunc(clients.ApiCallbackRoute, removeCallbackAlert).Methods(http.MethodDelete)
 
-	return mux
+	return r
 }
 
-func replyPing(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set(ContentTypeKey, ContentTypeJsonValue)
-	w.WriteHeader(http.StatusOK)
-	str := `{"value" : "pong"}`
-	io.WriteString(w, str)
+// Test if the service is working
+func pingHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("pong"))
 }
 
-func replyConfig(w http.ResponseWriter, r *http.Request) {
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
-
+func configHandler(w http.ResponseWriter, _ *http.Request) {
 	encode(Configuration, w)
 }
 
-func replyMetrics(w http.ResponseWriter, r *http.Request) {
-
+func metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	var t internal.Telemetry
-
-	if r.Body != nil {
-		defer r.Body.Close()
-	}
 
 	// The micro-service is to be considered the System Of Record (SOR) in terms of accurate information.
 	// Fetch metrics for the scheduler service.
@@ -98,15 +85,14 @@ func replyMetrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func replyInfo(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
 	w.Header().Add(ContentTypeKey, ContentTypeJsonValue)
 
-	vars := bone.GetValue(r, "name")
-	schedule, err := queryScheduleByName(vars)
+	vars := mux.Vars(r)
+	name := vars["name"]
+	schedule, err := queryScheduleByName(name)
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("read info request error %s", err.Error()))
-		http.Error(w,"Schedule/Event not found",http.StatusNotFound)
+		http.Error(w, "Schedule/Event not found", http.StatusNotFound)
 		return
 	}
 
@@ -117,13 +103,11 @@ func replyInfo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func replyFlushScheduler(w http.ResponseWriter, r *http.Request){
-	defer r.Body.Close()
-
-	w.Header().Add(ContentTypeKey,ContentTypeJsonValue)
+func replyFlushScheduler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add(ContentTypeKey, ContentTypeJsonValue)
 
 	err := AddSchedulers()
-	if err != nil{
+	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Error reloading new schedules, scheduleEvents,  or addressables: %s", err.Error()))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
