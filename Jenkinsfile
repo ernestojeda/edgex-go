@@ -29,14 +29,14 @@ edgeXGeneric([
     ],
     branches: [
         '*': [
-            pre_build: ['shell/install_custom_golang.sh'],
+            pre_build: ['shell/install_custom_golang.sh', 'shell/edgex-publish-swagger.sh'],
             build: [
                 'REPO_ROOT=${WORKSPACE} make test raml_verify && make build docker',
-                'shell/codecov-uploader.sh'
+                'shell/codecov-uploader.sh',
             ]
         ],
         'master': [
-            post_build: [ 'shell/edgexfoundry-go-docker-push.sh', 'shell/edgex-publish-swagger.sh' ]
+            post_build: [ 'shell/edgexfoundry-go-docker-push.sh' ]
         ]
     ]
 ])
