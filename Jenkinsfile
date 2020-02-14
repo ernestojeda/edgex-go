@@ -16,6 +16,7 @@
 
 edgeXGeneric([
     project: 'edgex-go',
+    arch: ['amd64'],
     mavenSettings: ['edgex-go-settings:SETTINGS_FILE', 'edgex-go-codecov-token:CODECOV_TOKEN'],
     credentials: [ string(credentialsId: 'swaggerhub-api-key', variable: 'APIKEY') ],
     env: [
@@ -29,7 +30,7 @@ edgeXGeneric([
     ],
     branches: [
         '*': [
-            pre_build: ['shell/install_custom_golang.sh', 'ls -alR $GOPATH/src/'],
+            pre_build: ['shell/install_custom_golang.sh', 'go mod download', 'ls -alR $GOPATH/src/github.com/edgexfoundry'],
             build: [
                 'make test raml_verify && make build docker',
                 'shell/codecov-uploader.sh'
