@@ -21,7 +21,7 @@ edgeXGeneric([
     env: [
         GOPATH: '/opt/go-custom/go',
         GO_VERSION: '1.13',
-        REPO_ROOT: "/home/jenkins/$BUILD_ID/gopath/src/github.com/edgexfoundry/edgex-go/",
+        REPO_ROOT: "$WORKSPACE/gopath/src/github.com/edgexfoundry/edgex-go",
         DEPLOY_TYPE: 'staging'
     ],
     path: [
@@ -29,7 +29,7 @@ edgeXGeneric([
     ],
     branches: [
         '*': [
-            pre_build: ['shell/install_custom_golang.sh'],
+            pre_build: ['shell/install_custom_golang.sh', 'ls -alR $GOPATH/src/'],
             build: [
                 'make test raml_verify && make build docker',
                 'shell/codecov-uploader.sh'
