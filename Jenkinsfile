@@ -18,11 +18,12 @@ edgeXGeneric([
     project: 'edgex-go',
     arch: ['amd64'],
     mavenSettings: ['edgex-go-settings:SETTINGS_FILE', 'edgex-go-codecov-token:CODECOV_TOKEN'],
-    credentials: [ string(credentialsId: 'swaggerhub-api-key', variable: 'APIKEY') ],
+    // credentials: [ string(credentialsId: 'swaggerhub-api-key', variable: 'APIKEY') ],
     env: [
         GOPATH: '/opt/go-custom/go',
         GO_VERSION: '1.13',
-        DEPLOY_TYPE: 'staging'
+        DEPLOY_TYPE: 'staging',
+        SWAGGER_DRY_RUN: 'true'
     ],
     path: [
         '/opt/go-custom/go/bin'
