@@ -21,7 +21,7 @@ edgeXGeneric([
     env: [
         GOPATH: '/opt/go-custom/go',
         GO_VERSION: '1.13',
-        REPO_ROOT: "$WORKSPACE/gopath/src/github.com/edgexfoundry/edgex-go",
+        REPO_ROOT: "/opt/go-custom/go/src/github.com/edgexfoundry/edgex-go",
         DEPLOY_TYPE: 'staging'
     ],
     path: [
