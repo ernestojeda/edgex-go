@@ -20,26 +20,14 @@ pipeline {
         timestamps()
     }
     stages {
-        stage('Prep Base Build Image') {
-            steps {
-                script { docker.build('edgex-go-ci-base', '-f Dockerfile.build .') }
-                sh 'docker save -o base.tar edgex-go-ci-base'
-                stash name: 'ci-base', includes: '**/base.tar'
-            }
-        }
-
         stage('Parallel Docker') {
-            agent { label 'centos7-docker-4c-2g' }
             environment {
                 BUILDER_BASE = 'edgex-go-ci-base'
             }
             steps {
-                unstash 'ci-base'
-
-                sh 'docker import base.tar $BUILDER_BASE'
-                sh 'rm -rf base.tar'
-
                 script {
+                    docker.build('edgex-go-ci-base', '-f Dockerfile.build .')
+
                     sh 'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
                     sh 'sudo chmod +x /usr/local/bin/docker-compose'
 
@@ -64,25 +52,23 @@ pipeline {
             }
         }
 
-        // stage('make docker with cache') {
-        //     agent { label 'centos7-docker-4c-2g' }
-        //     environment {
-        //         BUILDER_BASE = 'edgex-go-ci-base'
-        //     }
-        //     steps {
-        //         unstash 'ci-base'
-        //         sh 'docker import base.tar $BUILDER_BASE'
-        //         sh 'rm -rf base.tar'
-        //         sh 'make docker'
-        //     }
-        // }
+        stage('make docker with cache') {
+            agent { label 'centos7-docker-4c-2g' }
+            environment {
+                BUILDER_BASE = 'edgex-go-ci-base'
+            }
+            steps {
+                script { docker.build('edgex-go-ci-base', '-f Dockerfile.build .') }
+                sh 'make docker'
+            }
+        }
 
-        // stage('Current make docker') {
-        //     agent { label 'centos7-docker-4c-2g' }
-        //     steps {
-        //          sh 'make docker'
-        //     }
-        // }
+        stage('Current make docker') {
+            agent { label 'centos7-docker-4c-2g' }
+            steps {
+                 sh 'make docker'
+            }
+        }
     }
 }
 
