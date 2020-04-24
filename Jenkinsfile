@@ -16,6 +16,9 @@
 
 pipeline {
     agent { label 'centos7-docker-4c-2g' }
+    options {
+        timestamps()
+    }
     stages {
         stage('Prep Base Build Image') {
             steps {
@@ -54,7 +57,7 @@ pipeline {
                     dockers.each { dockerInfo ->
                         steps << ["Build ${dockerInfo.image}": {
                             def buildCommand = "docker build -f ${dockerInfo.dockerfile} -t edgexfoundry/docker-${dockerInfo.image} --label \"git_sha=${GIT_COMMIT}\""
-                            echo buildCommand
+                            sh buildCommand
                         }]
                     }
 
