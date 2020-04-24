@@ -75,9 +75,8 @@ pipeline {
 def generateDockerComposeForBuild(services) {
 """
 version: '3'
-
-  services:
-    ${services.collect { generateServiceYaml(it.image, it.dockerfile, env.GIT_COMMIT) }.join('\n') }
+services:
+${services.collect { generateServiceYaml(it.image, it.dockerfile, env.GIT_COMMIT) }.join('\n') }
 """
 }
 
