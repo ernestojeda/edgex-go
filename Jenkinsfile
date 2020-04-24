@@ -53,11 +53,11 @@ pipeline {
                         [image: 'sys-mgmt-agent-go', dockerfile: 'cmd/sys-mgmt-agent/Dockerfile'],
                         [image: 'edgex-secrets-setup-go', dockerfile: 'cmd/security-secrets-setup/Dockerfile'],
                         [image: 'edgex-security-proxy-setup-go', dockerfile: 'cmd/security-proxy-setup/Dockerfile'],
-                        [image: 'edgex-security-secretstore-setup-go', dockerfile: 'cmd/security-secretstore-setup/Dockerfile'
+                        [image: 'edgex-security-secretstore-setup-go', dockerfile: 'cmd/security-secretstore-setup/Dockerfile']
                     ]
 
                     def dockerCompose = generateDockerComposeForBuild(dockers)
-                    writeFile file: 'docker-compose.yml', text: dockerCompose
+                    writeFile(file: 'docker-compose.yml', text: dockerCompose)
                     sh 'cat docker-compose.yml'
                     sh 'docker-compose build --parallel'
                 }
