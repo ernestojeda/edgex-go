@@ -37,8 +37,7 @@ pipeline {
                 unstash 'ci-base'
 
                 sh 'docker import base.tar $BUILDER_BASE'
-                sh 'docker images'
-                sh 'ls -al'
+                sh 'rm -rf base.tar'
 
                 script {
                     def dockers = [
@@ -101,6 +100,7 @@ pipeline {
         //     steps {
         //         unstash 'ci-base'
         //         sh 'docker import base.tar $BUILDER_BASE'
+        //         sh 'rm -rf base.tar'
         //         sh 'make docker'
         //     }
         // }
