@@ -57,7 +57,7 @@ pipeline {
                     def steps = [:]
                     dockers.each { dockerInfo ->
                         steps << ["Build ${dockerInfo.image}": {
-                            def buildCommand = "docker build -f ${dockerInfo.dockerfile} -t edgexfoundry/docker-${dockerInfo.image} --label \"git_sha=${GIT_COMMIT}\" ."
+                            def buildCommand = "docker build --build-arg BUILDER_BASE -f ${dockerInfo.dockerfile} -t edgexfoundry/docker-${dockerInfo.image} --label \"git_sha=${GIT_COMMIT}\" ."
                             sh buildCommand
                         }]
                     }
