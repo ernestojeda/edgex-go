@@ -21,7 +21,8 @@ pipeline {
             steps {
                 script { docker.build('edgex-go-ci-base', '-f Dockerfile.build .') }
                 sh 'docker save -o base.tar edgex-go-ci-base'
-                stash name: 'ci-base', includes: './base.tar'
+                sh 'ls -al .'
+                stash name: 'ci-base', includes: '**/base.tar'
             }
         }
 
