@@ -45,16 +45,42 @@ pipeline {
                         [image: 'core-metadata-go', dockerfile: 'cmd/core-metadata/Dockerfile'],
                         [image: 'core-data-go', dockerfile: 'cmd/core-data/Dockerfile'],
                         [image: 'core-command-go', dockerfile: 'cmd/core-command/Dockerfile'],
-                        [image: 'support-logging-go', dockerfile: 'cmd/support-logging/Dockerfile'],
-                        [image: 'support-notifications-go', dockerfile: 'cmd/support-notifications/Dockerfile'],
-                        [image: 'support-scheduler-go', dockerfile: 'cmd/support-scheduler/Dockerfile'],
-                        [image: 'sys-mgmt-agent-go', dockerfile: 'cmd/sys-mgmt-agent/Dockerfile'],
-                        [image: 'edgex-secrets-setup-go', dockerfile: 'cmd/security-secrets-setup/Dockerfile'],
-                        [image: 'edgex-security-proxy-setup-go', dockerfile: 'cmd/security-proxy-setup/Dockerfile'],
-                        [image: 'edgex-security-secretstore-setup-go', dockerfile: 'cmd/security-secretstore-setup/Dockerfile'],
+                        [image: 'support-logging-go', dockerfile: 'cmd/support-logging/Dockerfile']
                     ]
 
                     def steps = [:]
+                    dockers.each { dockerInfo ->
+                        steps << ["Build ${dockerInfo.image}": {
+                            def buildCommand = "docker build --build-arg BUILDER_BASE -f ${dockerInfo.dockerfile} -t edgexfoundry/docker-${dockerInfo.image} --label \"git_sha=${GIT_COMMIT}\" ."
+                            sh buildCommand
+                        }]
+                    }
+
+                    parallel steps
+
+                    dockers = [
+                        [image: 'support-notifications-go', dockerfile: 'cmd/support-notifications/Dockerfile'],
+                        [image: 'support-scheduler-go', dockerfile: 'cmd/support-scheduler/Dockerfile'],
+                        [image: 'sys-mgmt-agent-go', dockerfile: 'cmd/sys-mgmt-agent/Dockerfile'],
+                        [image: 'edgex-secrets-setup-go', dockerfile: 'cmd/security-secrets-setup/Dockerfile']
+                    ]
+
+                    steps = [:]
+                    dockers.each { dockerInfo ->
+                        steps << ["Build ${dockerInfo.image}": {
+                            def buildCommand = "docker build --build-arg BUILDER_BASE -f ${dockerInfo.dockerfile} -t edgexfoundry/docker-${dockerInfo.image} --label \"git_sha=${GIT_COMMIT}\" ."
+                            sh buildCommand
+                        }]
+                    }
+
+                    parallel steps
+
+                    dockers = [
+                        [image: 'edgex-security-proxy-setup-go', dockerfile: 'cmd/security-proxy-setup/Dockerfile'],
+                        [image: 'edgex-security-secretstore-setup-go', dockerfile: 'cmd/security-secretstore-setup/Dockerfile']
+                    ]
+
+                    steps = [:]
                     dockers.each { dockerInfo ->
                         steps << ["Build ${dockerInfo.image}": {
                             def buildCommand = "docker build --build-arg BUILDER_BASE -f ${dockerInfo.dockerfile} -t edgexfoundry/docker-${dockerInfo.image} --label \"git_sha=${GIT_COMMIT}\" ."
