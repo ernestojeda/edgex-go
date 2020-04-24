@@ -14,23 +14,17 @@
 // limitations under the License.
 //
 
+def dockerCompose
+
 pipeline {
     agent { label 'centos7-docker-4c-2g' }
     options {
         timestamps()
     }
     stages {
-        stage('Parallel Docker') {
-            environment {
-                BUILDER_BASE = 'edgex-go-ci-base'
-            }
+        stage('Prep Parallel') {
             steps {
                 script {
-                    docker.build('edgex-go-ci-base', '-f Dockerfile.build .')
-
-                    sh 'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-                    sh 'sudo chmod +x /usr/local/bin/docker-compose'
-
                     def dockers = [
                         [image: 'core-metadata-go', dockerfile: 'cmd/core-metadata/Dockerfile'],
                         [image: 'core-data-go', dockerfile: 'cmd/core-data/Dockerfile'],
@@ -44,8 +38,44 @@ pipeline {
                         [image: 'edgex-security-secretstore-setup-go', dockerfile: 'cmd/security-secretstore-setup/Dockerfile']
                     ]
 
-                    def dockerCompose = generateDockerComposeForBuild(dockers)
+                    dockerCompose = generateDockerComposeForBuild(dockers)
+                }
+            }
+        }
+
+        stage('Parallel Docker x86') {
+            environment {
+                BUILDER_BASE = 'edgex-go-ci-base'
+            }
+            steps {
+                script {
+                    docker.build('edgex-go-ci-base', '-f Dockerfile.build .')
+
+                    sh 'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+                    sh 'sudo chmod +x /usr/local/bin/docker-compose'
+
                     writeFile(file: 'docker-compose.yml', text: dockerCompose)
+
+                    sh 'cat docker-compose.yml'
+                    sh 'docker-compose build --parallel'
+                }
+            }
+        }
+
+        stage('Parallel Docker arm64') {
+            agent { label 'ubuntu18.04-docker-arm64-4c-16g' }
+            environment {
+                BUILDER_BASE = 'edgex-go-ci-base'
+            }
+            steps {
+                script {
+                    docker.build('edgex-go-ci-base', '-f Dockerfile.build .')
+
+                    sh 'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+                    sh 'sudo chmod +x /usr/local/bin/docker-compose'
+
+                    writeFile(file: 'docker-compose.yml', text: dockerCompose)
+
                     sh 'cat docker-compose.yml'
                     sh 'docker-compose build --parallel'
                 }
