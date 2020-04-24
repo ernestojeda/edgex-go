@@ -24,7 +24,6 @@ pipeline {
             steps {
                 script { docker.build('edgex-go-ci-base', '-f Dockerfile.build .') }
                 sh 'docker save -o base.tar edgex-go-ci-base'
-                sh 'ls -al .'
                 stash name: 'ci-base', includes: '**/base.tar'
             }
         }
@@ -38,6 +37,8 @@ pipeline {
                 unstash 'ci-base'
 
                 sh 'docker import base.tar $BUILDER_BASE'
+                sh 'docker images'
+                sh 'ls -al'
 
                 script {
                     def dockers = [
@@ -56,7 +57,7 @@ pipeline {
                     def steps = [:]
                     dockers.each { dockerInfo ->
                         steps << ["Build ${dockerInfo.image}": {
-                            def buildCommand = "docker build -f ${dockerInfo.dockerfile} -t edgexfoundry/docker-${dockerInfo.image} --label \"git_sha=${GIT_COMMIT}\""
+                            def buildCommand = "docker build -f ${dockerInfo.dockerfile} -t edgexfoundry/docker-${dockerInfo.image} --label \"git_sha=${GIT_COMMIT}\" ."
                             sh buildCommand
                         }]
                     }
