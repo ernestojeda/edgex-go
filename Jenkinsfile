@@ -14,27 +14,71 @@
 // limitations under the License.
 //
 
-edgeXGeneric([
-    project: 'edgex-go',
-    mavenSettings: ['edgex-go-settings:SETTINGS_FILE', 'edgex-go-codecov-token:CODECOV_TOKEN', 'swaggerhub-api-key:APIKEY'],
-    env: [
-        GOPATH: '/opt/go-custom/go',
-        GO_VERSION: '1.13',
-        DEPLOY_TYPE: 'staging'
-    ],
-    path: [
-        '/opt/go-custom/go/bin'
-    ],
-    branches: [
-        '*': [
-            pre_build: ['shell/install_custom_golang.sh'],
-            build: [
-                'REPO_ROOT=${WORKSPACE} make test raml_verify && make build docker',
-                'shell/codecov-uploader.sh'
-            ]
-        ],
-        'master': [
-            post_build: [ 'shell/edgexfoundry-go-docker-push.sh', 'shell/edgex-publish-swagger.sh' ]
-        ]
-    ]
-])
+pipeline {
+    agent { label 'centos7-docker-4c-2g' }
+    stages {
+        stage('Prep Base Build Image') {
+            steps {
+                script { docker.build('edgex-go-ci-base', '-f Dockerfile.build .') }
+                sh 'docker save -o base.tar edgex-go-ci-base'
+                stash name: 'ci-base', includes: './base.tar'
+            }
+        }
+
+        stage('Parallel Docker') {
+            agent { label 'centos7-docker-4c-2g' }
+            environment {
+                BUILDER_BASE = 'edgex-go-ci-base'
+            }
+            steps {
+                unstash 'ci-base'
+
+                sh 'docker import base.tar $BUILDER_BASE'
+
+                script {
+                    def dockers = [
+                        [image: 'core-metadata-go', dockerfile: 'cmd/core-metadata/Dockerfile'],
+                        [image: 'core-data-go', dockerfile: 'cmd/core-data/Dockerfile'],
+                        [image: 'core-command-go', dockerfile: 'cmd/core-command/Dockerfile'],
+                        [image: 'support-logging-go', dockerfile: 'cmd/support-logging/Dockerfile'],
+                        [image: 'support-notifications-go', dockerfile: 'cmd/support-notifications/Dockerfile'],
+                        [image: 'support-scheduler-go', dockerfile: 'cmd/support-scheduler/Dockerfile'],
+                        [image: 'sys-mgmt-agent-go', dockerfile: 'cmd/sys-mgmt-agent/Dockerfile'],
+                        [image: 'edgex-secrets-setup-go', dockerfile: 'cmd/security-secrets-setup/Dockerfile'],
+                        [image: 'edgex-security-proxy-setup-go', dockerfile: 'cmd/security-proxy-setup/Dockerfile'],
+                        [image: 'edgex-security-secretstore-setup-go', dockerfile: 'cmd/security-secretstore-setup/Dockerfile'],
+                    ]
+
+                    def steps = [:]
+                    dockers.each { dockerInfo ->
+                        steps << ["Build ${dockerInfo.image}": {
+                            def buildCommand = "docker build -f ${dockerInfo.dockerfile} -t edgexfoundry/docker-${dockerInfo.image} --label \"git_sha=${GIT_COMMIT}\""
+                            echo buildCommand
+                        }]
+                    }
+
+                    parallel steps
+                }
+            }
+        }
+
+        // stage('make docker with cache') {
+        //     agent { label 'centos7-docker-4c-2g' }
+        //     environment {
+        //         BUILDER_BASE = 'edgex-go-ci-base'
+        //     }
+        //     steps {
+        //         unstash 'ci-base'
+        //         sh 'docker import base.tar $BUILDER_BASE'
+        //         sh 'make docker'
+        //     }
+        // }
+
+        // stage('Current make docker') {
+        //     agent { label 'centos7-docker-4c-2g' }
+        //     steps {
+        //          sh 'make docker'
+        //     }
+        // }
+    }
+}

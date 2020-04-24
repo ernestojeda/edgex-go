@@ -25,31 +25,22 @@
 #  ----------------------------------------------------------------------------------
 
 # Docker image for building EdgeX Foundry security-secrets-setup
-FROM golang:1.13-alpine AS build-env
-
-# environment variables
-ENV GO111MODULE=on
+ARG BUILDER_BASE=golang:1.13-alpine
+FROM ${BUILDER_BASE} AS builder
 
 # set the working directory
 WORKDIR /edgex-go
 
 RUN apk update && apk add make git
 
-# copy go source files
-COPY go.mod .
-
-RUN go mod download
-
 COPY . .
 
 RUN make cmd/security-secrets-setup/security-secrets-setup
 
-FROM alpine:latest
+FROM alpine:3.11
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.  Copyright (c) 2019 Intel Corporation'
-
-USER root
 
 # install necessary tools
 RUN apk update && apk add ca-certificates dumb-init \
@@ -63,22 +54,22 @@ RUN mkdir res && \
     mkdir /vault/staging
 
 # Vault PKI/TLS setup/config binary
-COPY --from=build-env /edgex-go/cmd/security-secrets-setup/security-secrets-setup .
+COPY --from=builder /edgex-go/cmd/security-secrets-setup/security-secrets-setup .
 # Service configuration file
-COPY --from=build-env /edgex-go/cmd/security-secrets-setup/res/configuration.toml ./res
+COPY --from=builder /edgex-go/cmd/security-secrets-setup/res/configuration.toml ./res
 # Vault PKI/TLS materials
-COPY --from=build-env /edgex-go/cmd/security-secrets-setup/res/pkisetup-vault.json ./res
+COPY --from=builder /edgex-go/cmd/security-secrets-setup/res/pkisetup-vault.json ./res
 # Kong PKI/TLS materials
-COPY --from=build-env /edgex-go/cmd/security-secrets-setup/res/pkisetup-kong.json ./res
+COPY --from=builder /edgex-go/cmd/security-secrets-setup/res/pkisetup-kong.json ./res
 
 # Vault's startup script
-COPY --from=build-env /edgex-go/cmd/security-secrets-setup/start_vault.sh /vault/staging
+COPY --from=builder /edgex-go/cmd/security-secrets-setup/start_vault.sh /vault/staging
 RUN chmod +x /vault/staging/start_vault.sh
 
 # setup the entry point script
 # it uses `dumb-init` as the top-level process to reap any
 # zombie processes created by sub-processes
-COPY --from=build-env /edgex-go/cmd/security-secrets-setup/entrypoint.sh /usr/local/bin/
+COPY --from=builder /edgex-go/cmd/security-secrets-setup/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh \
     && ln -s /usr/local/bin/entrypoint.sh /
 

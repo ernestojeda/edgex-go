@@ -5,11 +5,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
+ARG BUILDER_BASE=golang:1.13-alpine
+FROM ${BUILDER_BASE} AS builder
 
-FROM golang:1.13-alpine AS builder
-
-ENV GO111MODULE=on
-WORKDIR /go/src/github.com/edgexfoundry/edgex-go
+WORKDIR /edgex-go
 
 # The main mirrors are giving us timeout issues on builds periodically.
 # So we can try these.
@@ -17,11 +16,6 @@ WORKDIR /go/src/github.com/edgexfoundry/edgex-go
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
 RUN apk update && apk add make git
-
-COPY go.mod .
-#COPY go.sum .
-
-RUN go mod download
 
 COPY . .
 
@@ -37,7 +31,7 @@ ENV APP_PORT=48082
 EXPOSE $APP_PORT
 
 WORKDIR /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/Attribution.txt /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/core-command /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-command/res/configuration.toml /res/configuration.toml
+COPY --from=builder /edgex-go/cmd/core-command/Attribution.txt /
+COPY --from=builder /edgex-go/cmd/core-command/core-command /
+COPY --from=builder /edgex-go/cmd/core-command/res/configuration.toml /res/configuration.toml
 ENTRYPOINT ["/core-command","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]

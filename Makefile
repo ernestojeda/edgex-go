@@ -96,6 +96,7 @@ docker_core_metadata:
 	docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/core-metadata/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-metadata-go:$(GIT_SHA) \
@@ -106,6 +107,7 @@ docker_core_data:
 	docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/core-data/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-data-go:$(GIT_SHA) \
@@ -116,6 +118,7 @@ docker_core_command:
 	docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/core-command/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-command-go:$(GIT_SHA) \
@@ -126,6 +129,7 @@ docker_support_logging:
 	docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/support-logging/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-support-logging-go:$(GIT_SHA) \
@@ -136,6 +140,7 @@ docker_support_notifications:
 	docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/support-notifications/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-support-notifications-go:$(GIT_SHA) \
@@ -146,6 +151,7 @@ docker_support_scheduler:
 	docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/support-scheduler/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-support-scheduler-go:$(GIT_SHA) \
@@ -156,6 +162,7 @@ docker_sys_mgmt_agent:
 	docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/sys-mgmt-agent/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-sys-mgmt-agent-go:$(GIT_SHA) \
@@ -166,6 +173,7 @@ docker_security_secrets_setup:
 	docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/security-secrets-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-edgex-secrets-setup-go:$(GIT_SHA) \
@@ -176,6 +184,7 @@ docker_security_proxy_setup:
 	docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/security-proxy-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-edgex-security-proxy-setup-go:$(GIT_SHA) \
@@ -186,6 +195,7 @@ docker_security_secretstore_setup:
 		docker build \
 	    --build-arg http_proxy \
 	    --build-arg https_proxy \
+	    --build-arg BUILDER_BASE \
 		-f cmd/security-secretstore-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-edgex-security-secretstore-setup-go:$(GIT_SHA) \
