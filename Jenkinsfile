@@ -43,60 +43,87 @@ pipeline {
             }
         }
 
-        stage('Parallel Docker x86') {
-            environment {
-                BUILDER_BASE = 'edgex-go-ci-base'
-            }
-            steps {
-                script {
-                    docker.build('edgex-go-ci-base', '-f Dockerfile.build .')
+        stage('Build') {
+            parallel {
+                stage('Parallel Docker x86') {
+                    environment {
+                        BUILDER_BASE = 'edgex-go-ci-base'
+                    }
+                    steps {
+                        script {
+                            docker.build(env.BUILDER_BASE, '-f Dockerfile.build .')
 
-                    sh 'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-                    sh 'sudo chmod +x /usr/local/bin/docker-compose'
+                            docker.image(env.BUILDER_BASE).inside {
+                                sh 'make test'
+                            }
 
-                    writeFile(file: 'docker-compose.yml', text: dockerCompose)
+                            sh 'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+                            sh 'sudo chmod +x /usr/local/bin/docker-compose'
 
-                    sh 'cat docker-compose.yml'
-                    sh 'docker-compose build --parallel'
+                            writeFile(file: 'docker-compose.yml', text: dockerCompose)
+                            sh 'cat docker-compose.yml'
+
+                            sh 'docker-compose build --parallel'
+                        }
+                    }
                 }
-            }
-        }
 
-        stage('Parallel Docker arm64') {
-            agent { label 'ubuntu18.04-docker-arm64-4c-16g' }
-            environment {
-                BUILDER_BASE = 'edgex-go-ci-base'
-            }
-            steps {
-                script {
-                    docker.build('edgex-go-ci-base', '-f Dockerfile.build .')
+                stage('Parallel Docker arm64') {
+                    agent { label 'ubuntu18.04-docker-arm64-4c-16g' }
+                    environment {
+                        BUILDER_BASE = 'edgex-go-ci-base'
+                    }
+                    steps {
+                        script {
+                            docker.build(env.BUILDER_BASE, '-f Dockerfile.build .')
 
-                    sh 'sudo curl -L "https://github.com/docker/compose/releases/download/1.25.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-                    sh 'sudo chmod +x /usr/local/bin/docker-compose'
+                            docker.image(env.BUILDER_BASE).inside {
+                                sh 'make test'
+                            }
 
-                    writeFile(file: 'docker-compose.yml', text: dockerCompose)
+                            sh 'sudo apt-get install docker-compose'
 
-                    sh 'cat docker-compose.yml'
-                    sh 'docker-compose build --parallel'
+                            writeFile(file: 'docker-compose.yml', text: dockerCompose)
+                            sh 'cat docker-compose.yml'
+
+                            sh 'docker-compose build --parallel'
+                        }
+                    }
                 }
-            }
-        }
 
-        stage('make docker with cache') {
-            agent { label 'centos7-docker-4c-2g' }
-            environment {
-                BUILDER_BASE = 'edgex-go-ci-base'
-            }
-            steps {
-                script { docker.build('edgex-go-ci-base', '-f Dockerfile.build .') }
-                sh 'make docker'
-            }
-        }
+                stage('make docker with cache') {
+                    agent { label 'centos7-docker-4c-2g' }
+                    environment {
+                        BUILDER_BASE = 'edgex-go-ci-base'
+                    }
+                    steps {
+                        script {
+                            docker.build(env.BUILDER_BASE, '-f Dockerfile.build .')
 
-        stage('Current make docker') {
-            agent { label 'centos7-docker-4c-2g' }
-            steps {
-                 sh 'make docker'
+                            // test
+                            docker.image(env.BUILDER_BASE).inside {
+                                sh 'make test'
+                            }
+
+                            // docker
+                            sh 'make docker'
+                        }
+                    }
+                }
+
+                stage('Current make docker') {
+                    agent { label 'centos7-docker-4c-2g' }
+                    steps {
+                        script {
+                            // test
+                            docker.image('golang:1.13-alpine').inside {
+                                sh 'make test'
+                            }
+
+                            sh 'make docker'
+                        }
+                    }
+                }
             }
         }
     }
