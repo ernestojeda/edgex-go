@@ -93,7 +93,7 @@ pipeline {
                     }
                 }
 
-                stage('make docker with cache') {
+                stage('make docker with cache x86') {
                     agent { label 'centos7-docker-4c-2g' }
                     environment {
                         BUILDER_BASE = 'edgex-go-ci-base'
@@ -114,8 +114,44 @@ pipeline {
                     }
                 }
 
-                stage('Current make docker') {
+                stage('make docker with cache ARM64') {
+                    agent { label 'ubuntu18.04-docker-arm64-4c-16g' }
+                    environment {
+                        BUILDER_BASE = 'edgex-go-ci-base'
+                    }
+                    steps {
+                        script {
+                            docker.build(env.BUILDER_BASE, '-f Dockerfile.build .')
+
+                            // test
+                            docker.image('golang:1.13').inside('-u 0:0 --privileged') {
+                                sh 'apt-get update && apt-get install -y make git libzmq3-dev libsodium-dev pkg-config'
+                                sh 'make test'
+                            }
+
+                            // docker
+                            sh 'make docker'
+                        }
+                    }
+                }
+
+                stage('Current make docker x86') {
                     agent { label 'centos7-docker-4c-2g' }
+                    steps {
+                        script {
+                            // test
+                            docker.image('golang:1.13').inside('-u 0:0 --privileged') {
+                                sh 'apt-get update && apt-get install -y make git libzmq3-dev libsodium-dev pkg-config'
+                                sh 'make test'
+                            }
+
+                            sh 'make docker'
+                        }
+                    }
+                }
+
+                stage('Current make docker ARM64') {
+                    agent { label 'ubuntu18.04-docker-arm64-4c-16g' }
                     steps {
                         script {
                             // test
