@@ -83,12 +83,12 @@ pipeline {
                                 sh 'make test'
                             }
 
-                            sh 'sudo apt-get update && sudo apt-get install -y python python-pip && pip install docker-compose'
-
                             writeFile(file: 'docker-compose.yml', text: dockerCompose)
                             sh 'cat docker-compose.yml'
 
-                            sh 'docker-compose build --parallel'
+                            docker.image('nexus3.edgexfoundry.org:10003/edgex-devops/edgex-compose-arm64:latest').inside('-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock --privileged') {
+                                sh 'docker-compose build --parallel'
+                            }
                         }
                     }
                 }
