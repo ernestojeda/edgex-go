@@ -83,7 +83,7 @@ pipeline {
                                 sh 'make test'
                             }
 
-                            sh 'sudo apt-get update && sudo apt-get install -y python pip && pip install docker-compose'
+                            sh 'sudo apt-get update && sudo apt-get install -y python python-pip && pip install docker-compose'
 
                             writeFile(file: 'docker-compose.yml', text: dockerCompose)
                             sh 'cat docker-compose.yml'
