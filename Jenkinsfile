@@ -53,7 +53,7 @@ pipeline {
                         script {
                             docker.build(env.BUILDER_BASE, '-f Dockerfile.build .')
 
-                            docker.image(env.BUILDER_BASE).inside {
+                            docker.image(env.BUILDER_BASE).inside('-u 0:0 --privileged') {
                                 sh 'make test'
                             }
 
@@ -77,7 +77,7 @@ pipeline {
                         script {
                             docker.build(env.BUILDER_BASE, '-f Dockerfile.build .')
 
-                            docker.image(env.BUILDER_BASE).inside {
+                            docker.image(env.BUILDER_BASE).inside('-u 0:0 --privileged') {
                                 sh 'make test'
                             }
 
@@ -101,7 +101,7 @@ pipeline {
                             docker.build(env.BUILDER_BASE, '-f Dockerfile.build .')
 
                             // test
-                            docker.image(env.BUILDER_BASE).inside {
+                            docker.image(env.BUILDER_BASE).inside('-u 0:0 --privileged') {
                                 sh 'make test'
                             }
 
@@ -116,7 +116,7 @@ pipeline {
                     steps {
                         script {
                             // test
-                            docker.image('golang:1.13-alpine').inside {
+                            docker.image('golang:1.13-alpine').inside('-u 0:0 --privileged') {
                                 sh 'apk add --update make git'
                                 sh 'make test'
                             }
