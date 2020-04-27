@@ -1,7 +1,7 @@
 ARG BASE=golang:1.13-alpine
 FROM ${BASE}
 
-RUN apk add --update make git zeromq-dev libsodium-dev pkgconfig build-base git curl bash
+RUN apk add --update make zeromq-dev libsodium-dev pkgconfig build-base git curl bash
 
 WORKDIR /edgex-go
 COPY go.mod .

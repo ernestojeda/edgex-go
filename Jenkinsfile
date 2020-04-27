@@ -117,6 +117,7 @@ pipeline {
                         script {
                             // test
                             docker.image('golang:1.13-alpine').inside {
+                                sh 'apk add --update make git'
                                 sh 'make test'
                             }
 
