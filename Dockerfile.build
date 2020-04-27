@@ -1,4 +1,4 @@
-ARG BASE=golang:1.13
+ARG BASE=golang:1.13-alpine
 FROM ${BASE}
 
 RUN apk add --update make git curl bash zeromq-dev libsodium-dev pkgconfig build-base
