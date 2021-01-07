@@ -14,6 +14,8 @@
 // limitations under the License.
 //
 
+@Library("edgex-global-pipelines@a6bf1fb4b751f1938775dbe1187da372ea450dbb") _
+
 edgeXBuildGoParallel(
     project: 'edgex-go',
     dockerFileGlobPath: 'cmd/**/Dockerfile',
