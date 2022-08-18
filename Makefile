@@ -56,7 +56,14 @@ MICROSERVICES= \
 
 .PHONY: $(MICROSERVICES)
 
-VERSION=$(shell cat ./VERSION 2>/dev/null || echo 0.0.0)
+GIT_REMOTE=$(shell if git remote -v | grep -q upstream; then echo upstream; else echo origin; fi)
+GIT_BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
+GIT_REPO=$(shell git remote get-url $(GIT_REMOTE) | cut -d: -f2 | sed 's/\.git//g')
+GIT_BRANCH=sample
+GIT_REPO=edgexfoundry/sample-service
+SEMVER_FILE=https://raw.githubusercontent.com/$(GIT_REPO)/semver/$(GIT_BRANCH)
+
+VERSION=$(shell cat ./VERSION 2>/dev/null || curl -s "$(SEMVER_FILE)" | jq -r '.current' 2>/dev/null || echo 0.0.0)
 DOCKER_TAG=$(VERSION)-dev
 
 GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly
@@ -336,3 +343,7 @@ docker_security_spiffe_token_provider: docker_base
 
 vendor:
 	$(GO) mod vendor
+
+.PHONY: version
+version:
+	@echo $(VERSION)
